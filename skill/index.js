@@ -9,9 +9,9 @@ const languageStrings = {
     'en': {
         translation: {
             OK                          : 'Command sent.',
-            ERROR_COMMAND_TO            : 'The command was structured wrong. Sorry!'
-            ERROR_COMMAND_FAILED        : 'The command failed to be sent. Sorry!'
-            ERROR_COMMAND_INVALID       : 'That command is not supported. Sorry!'
+            ERROR_COMMAND_TO            : 'The command was structured wrong. Sorry!',
+            ERROR_COMMAND_FAILED        : 'The command failed to be sent. Sorry!',
+            ERROR_COMMAND_INVALID       : 'That command is not supported. Sorry!',
         }
     }
 };
@@ -28,7 +28,7 @@ function Publish(topic = 'defaulttopic', command, cb) {
         if (err) {
             console.log(err);
         } else {
-            return cb();
+            return cb;
         }
     });
 }
@@ -39,12 +39,11 @@ const handlers = {
         this.emit(':tell', this.t('ERROR_COMMAND_TO'));
     },
     //called when `ask "my computer" "to"` is said
-    mainIntent: function () {
+    logIntent: function () {
 
-        const command = this.event.request.intent.slots.command.value;
-
-        Publish('topic', 'command', function () {
-            this.emit(':tell', this.t('OK'));
+        const self = this;
+        Publish('topic', 'log off', function () {
+            self.emit(':tell', this.t('OK'));
         });
     },
     Unhandled: function () {
