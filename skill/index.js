@@ -1,9 +1,9 @@
 'use strict';
-const Alexa = require('alexa-sdk');
 const AWS = require('aws-sdk');
+const Alexa = require('alexa-sdk');
 
-const appId = 'amzn1.ask.skill.3a7252e6-5924-45b6-b816-18d61c2f2cd0';
-const iotEndpoint = 'apn2stdwvjd9h.iot.eu-west-1.amazonaws.com';
+//const appId = 'amzn1.ask.skill.39656857-2dbe-4b03-ace9-1ac47874c7d3';
+var iotdata = new AWS.IotData({ endpoint: 'apn2stdwvjd9h.iot.eu-west-1.amazonaws.com' });    
 
 const languageStrings = {
     'en': {
@@ -16,19 +16,19 @@ const languageStrings = {
     }
 };
 
-function Publish(topic = 'defaulttopic', command, cb) {
-    var iotdata = new AWS.IotData({ endpoint: iotEndpoint });    
+function mqttPublish(topic, command, cb) {
+
     var params = {
-        topic: topic,
-        payload: command,
+        topic: 'topic',
+        payload: new Buffer('log off') || 'STRING_VALUE',
         qos: 0
     };
 
-    iotdata.publish(params, function (err, data) {
-        if (err) {
+    iotdata.publish(params, function(err, data) {
+        if (err) 
             console.log(err);
-        } else {
-            return cb;
+        else {     
+            cb(err, data);
         }
     });
 }
@@ -38,13 +38,17 @@ const handlers = {
     LaunchRequest: function () {
         this.emit(':tell', this.t('ERROR_COMMAND_TO'));
     },
-    //called when `ask "my computer" "to"` is said
+    //called when `ask "my computer" to "log off"` is said
     logIntent: function () {
 
-        const self = this;
-        Publish('topic', 'log off', function () {
-            self.emit(':tell', this.t('OK'));
-        });
+        var self = this
+        mqttPublish('topic', 'log off', function(err, data) {
+            if (err)
+                self.emit(':tell', self.t('ERROR_COMMAND_FAILED'));
+            else
+                self.emit(':tell', self.t('OK'));
+        });  
+
     },
     Unhandled: function () {
         this.emit(':tell', this.t('ERROR_COMMAND_TO'));
@@ -53,7 +57,7 @@ const handlers = {
 
 exports.handler = function (event, context) {
     const alexa = Alexa.handler(event, context);
-    alexa.APP_ID = appId;
+//    alexa.appId = appId;
     alexa.resources = languageStrings;
     alexa.registerHandlers(handlers);
     alexa.execute();
