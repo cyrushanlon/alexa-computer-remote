@@ -2,14 +2,15 @@ package main
 
 import (
 	"crypto/tls"
-	"fmt"
 	"time"
+
+	"log"
+
+	"../../service" //gross but its like this as the js part is in the root too
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/eclipse/paho.mqtt.golang"
-	//_ "github.com/joho/godotenv/autoload"
-	"log"
 )
 
 //Get messages from IOT
@@ -39,8 +40,10 @@ func sendMQTTMessage(topic string, msg string) {
 
 //define a function for the default message handler
 var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-	fmt.Printf("TOPIC: %s\n", msg.Topic())
-	fmt.Printf("MSG: %s\n", msg.Payload())
+	err := service.DoCommand(string(msg.Payload()))
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func serviceInit() error {
@@ -48,7 +51,7 @@ func serviceInit() error {
 	sess = createAWSSession(region)
 
 	//load the certs from next to main.go
-	cer, err := tls.LoadX509KeyPair("393598194e-public.pem.key", "393598194e-private.pem.key") //need to change this
+	cer, err := tls.LoadX509KeyPair("0a7cd9556a-certificate.pem.crt", "0a7cd9556a-private.pem.key") //need to change this
 	if err != nil {
 		return err
 	}
@@ -56,7 +59,10 @@ func serviceInit() error {
 	//Create and configure the mqtt client
 	connOpts := mqtt.NewClientOptions()
 	connOpts.SetClientID("myComputer" + time.Now().String())
+	connOpts.SetCleanSession(true)
+	connOpts.SetAutoReconnect(true)
 	connOpts.SetMaxReconnectInterval(1 * time.Second)
+	connOpts.SetKeepAlive(30 * time.Second)
 	connOpts.SetTLSConfig(&tls.Config{Certificates: []tls.Certificate{cer}})
 
 	connOpts.AddBroker("tcps://apn2stdwvjd9h.iot.eu-west-1.amazonaws.com:8883/mqtt")
@@ -76,8 +82,14 @@ func serviceInit() error {
 }
 
 func main() {
-	serviceInit()
+
+	err := serviceInit()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	log.Println("Ready")
+
 	for {
 		time.Sleep(time.Second)
 	}
