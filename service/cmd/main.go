@@ -6,14 +6,14 @@ import (
 
 	"log"
 
-	"../../service" //gross but its like this as the js part is in the root too
+	"../../service" // fix
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	//"github.com/cyrushanlon/alexa-computer-remove/service"
 	"github.com/eclipse/paho.mqtt.golang"
 )
 
-//Get messages from IOT
 //Call platform specific shutdown or w/e command
 
 var (
