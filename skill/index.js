@@ -2,8 +2,7 @@
 const AWS = require('aws-sdk');
 const Alexa = require('alexa-sdk');
 
-//const appId = 'amzn1.ask.skill.39656857-2dbe-4b03-ace9-1ac47874c7d3';
-var iotdata = new AWS.IotData({ endpoint: 'apn2stdwvjd9h.iot.eu-west-1.amazonaws.com' });    
+var iotdata = new AWS.IotData({ endpoint: process.env.IOT_ENDPOINT });    
 
 const languageStrings = {
     'en': {
@@ -25,7 +24,7 @@ const languageStrings = {
 function mqttPublish(topic, command, cb) {
 
     var params = {
-        topic: 'topic',
+        topic: topic,
         payload: new Buffer(command) || 'STRING_VALUE',
         qos: 0
     };
@@ -86,8 +85,15 @@ const handlers = {
 };
 
 exports.handler = function (event, context) {
+
+    //these are so I can use the service testing thing rather than speaking to the device every time
+    event.context.System.application.applicationId = event.session.application.applicationId;
+    event.context.System.user.userId = event.session.user.userId;
+
     const alexa = Alexa.handler(event, context);
-//    alexa.appId = appId;
+
+    alexa.appId = process.env.APP_ID;
+
     alexa.resources = languageStrings;
     alexa.registerHandlers(handlers);
     alexa.execute();
